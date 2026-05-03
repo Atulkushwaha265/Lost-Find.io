@@ -1,0 +1,433 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Axis Lost & Found{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white" data-aos="fade-up">
+                <div class="card-body">
+                    <h2 class="mb-2">
+                        <i class="fas fa-user me-2"></i>My Profile
+                    </h2>
+                    <p class="mb-0">Manage your account settings and preferences</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Profile Information -->
+        <div class="col-lg-6 mb-4" data-aos="fade-up">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-circle me-2"></i>Profile Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('update_profile') }}">
+                        <!-- Profile Picture -->
+                        <div class="text-center mb-4">
+                            <div class="profile-avatar">
+                                <div class="bg-primary rounded-circle p-4 d-inline-block">
+                                    <i class="fas fa-user fa-3x text-white"></i>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm mt-2">
+                                    <i class="fas fa-camera me-1"></i>Change Photo
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ current_user.name }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ current_user.email }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   value="{{ current_user.phone or '' }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Account Type</label>
+                            <div>
+                                <span class="badge bg-{{ 'warning' if current_user.is_admin() else 'info' }}">
+                                    <i class="fas fa-{{ 'crown' if current_user.is_admin() else 'user' }} me-1"></i>
+                                    {{ 'Administrator' if current_user.is_admin() else 'Student' }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Member Since</label>
+                            <div>
+                                <small class="text-muted">
+                                    {{ current_user.created_at.strftime('%d %B %Y') }}
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Change Password -->
+        <div class="col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lock me-2"></i>Change Password
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('change_password') }}">
+                        <div class="mb-3">
+                            <label for="current_password" class="form-label">Current Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="current_password" 
+                                       name="current_password" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('current_password')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">New Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="new_password" 
+                                       name="new_password" required minlength="6">
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Password must be at least 6 characters long</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Confirm New Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="confirm_password" 
+                                       name="confirm_password" required minlength="6">
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Password Strength Indicator -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="text-muted">Password Strength</small>
+                                <small id="strengthText" class="text-muted">-</small>
+                            </div>
+                            <div class="progress" style="height: 5px;">
+                                <div id="strengthBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-key me-2"></i>Change Password
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Statistics -->
+        <div class="col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>My Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="stat-icon">
+                                <i class="fas fa-times-circle text-danger"></i>
+                            </div>
+                            <h4>{{ current_user.lost_items|length }}</h4>
+                            <p class="text-muted mb-0">Lost Items Reported</p>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="stat-icon">
+                                <i class="fas fa-check-circle text-success"></i>
+                            </div>
+                            <h4>{{ current_user.found_items|length }}</h4>
+                            <p class="text-muted mb-0">Found Items Reported</p>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="stat-icon">
+                                <i class="fas fa-link text-info"></i>
+                            </div>
+                            <h4>{{ current_user.lost_items|selectattr('status', 'equalto', 'matched')|list|length + current_user.found_items|selectattr('status', 'equalto', 'matched')|list|length }}</h4>
+                            <p class="text-muted mb-0">Items Matched</p>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="stat-icon">
+                                <i class="fas fa-undo text-primary"></i>
+                            </div>
+                            <h4>{{ current_user.lost_items|selectattr('status', 'equalto', 'returned')|list|length + current_user.found_items|selectattr('status', 'equalto', 'returned')|list|length }}</h4>
+                            <p class="text-muted mb-0">Items Returned</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="text-center">
+                        <h6>Success Rate</h6>
+                        <div class="progress mb-3" style="height: 25px;">
+                            {% set total_items = current_user.lost_items|length + current_user.found_items|length %}
+                            {% set returned_items = current_user.lost_items|selectattr('status', 'equalto', 'returned')|list|length + current_user.found_items|selectattr('status', 'equalto', 'returned')|list|length %}
+                            {% set success_rate = (returned_items / total_items * 100) if total_items > 0 else 0 %}
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ success_rate }}%">
+                                {{ success_rate|round(1) }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">Items successfully returned to owners</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="300">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Recent Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% set recent_lost = current_user.lost_items[:3] %}
+                        {% set recent_found = current_user.found_items[:3] %}
+                        
+                        {% if recent_lost or recent_found %}
+                            {% for item in recent_lost %}
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-danger">
+                                        <i class="fas fa-times-circle"></i>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <h6>Lost Item Reported</h6>
+                                        <p class="text-muted mb-1">{{ item.item_name }}</p>
+                                        <small class="text-muted">{{ item.created_at.strftime('%d %b %Y at %I:%M %p') }}</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            
+                            {% for item in recent_found %}
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-success">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <h6>Found Item Reported</h6>
+                                        <p class="text-muted mb-1">{{ item.item_name }}</p>
+                                        <small class="text-muted">{{ item.created_at.strftime('%d %b %Y at %I:%M %p') }}</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No recent activity</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Toggle password visibility
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const icon = event.target.querySelector('i');
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        field.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Password strength checker
+document.getElementById('new_password').addEventListener('input', function() {
+    const password = this.value;
+    const strengthBar = document.getElementById('strengthBar');
+    const strengthText = document.getElementById('strengthText');
+    
+    let strength = 0;
+    
+    if (password.length >= 6) strength++;
+    if (password.length >= 10) strength++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+    if (/\d/.test(password)) strength++;
+    if (/[^a-zA-Z\d]/.test(password)) strength++;
+    
+    const strengthLevels = [
+        { width: '0%', color: 'bg-danger', text: 'Very Weak' },
+        { width: '20%', color: 'bg-danger', text: 'Weak' },
+        { width: '40%', color: 'bg-warning', text: 'Fair' },
+        { width: '60%', color: 'bg-info', text: 'Good' },
+        { width: '80%', color: 'bg-success', text: 'Strong' },
+        { width: '100%', color: 'bg-success', text: 'Very Strong' }
+    ];
+    
+    const level = strengthLevels[strength];
+    strengthBar.style.width = level.width;
+    strengthBar.className = `progress-bar ${level.color}`;
+    strengthText.textContent = level.text;
+    strengthText.className = level.color.replace('bg-', 'text-');
+});
+
+// Real-time password confirmation check
+document.getElementById('confirm_password').addEventListener('input', function() {
+    const newPassword = document.getElementById('new_password').value;
+    const confirmPassword = this.value;
+    
+    if (confirmPassword && newPassword !== confirmPassword) {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else if (confirmPassword && newPassword === confirmPassword) {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+    } else {
+        this.classList.remove('is-valid', 'is-invalid');
+    }
+});
+
+// Form validation
+document.querySelector('form[action="/profile/update"]').addEventListener('submit', function(e) {
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    
+    if (!name || !email) {
+        e.preventDefault();
+        alert('Please fill in all required fields');
+        return false;
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        e.preventDefault();
+        alert('Please enter a valid email address');
+        return false;
+    }
+});
+
+document.querySelector('form[action="/change-password"]').addEventListener('submit', function(e) {
+    const currentPassword = document.getElementById('current_password').value;
+    const newPassword = document.getElementById('new_password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        e.preventDefault();
+        alert('Please fill in all password fields');
+        return false;
+    }
+    
+    if (newPassword.length < 6) {
+        e.preventDefault();
+        alert('New password must be at least 6 characters long');
+        return false;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        e.preventDefault();
+        alert('New passwords do not match');
+        return false;
+    }
+});
+</script>
+
+<style>
+.profile-avatar {
+    position: relative;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border-left: 3px solid #007bff;
+}
+
+.timeline-content h6 {
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.timeline-content p {
+    margin-bottom: 0;
+    font-size: 13px;
+}
+</style>
+{% endblock %}

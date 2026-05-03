@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Axis Lost & Found{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-info text-white" data-aos="fade-up">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-2">
+                                <i class="fas fa-bell me-2"></i>Notifications
+                            </h2>
+                            <p class="mb-0">Stay updated with your lost and found item activities</p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <button class="btn btn-light" onclick="markAllAsRead()">
+                                <i class="fas fa-check-double me-2"></i>Mark All as Read
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" data-aos="fade-up">
+                <div class="card-body">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" onclick="filterNotifications('all')">
+                                <i class="fas fa-list me-2"></i>All Notifications
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="filterNotifications('unread')">
+                                <i class="fas fa-envelope me-2"></i>Unread
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="filterNotifications('success')">
+                                <i class="fas fa-check-circle me-2"></i>Success
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="filterNotifications('info')">
+                                <i class="fas fa-info-circle me-2"></i>Info
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="filterNotifications('warning')">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Warning
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="row">
+        <div class="col-12">
+            {% if notifications.items %}
+                {% for notification in notifications.items %}
+                    <div class="card mb-3 notification-item {{ 'unread' if not notification.is_read else '' }}" 
+                         data-type="{{ notification.type }}" data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-1 text-center">
+                                    <div class="notification-icon">
+                                        {% if notification.type == 'success' %}
+                                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                                        {% elif notification.type == 'warning' %}
+                                            <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                                        {% elif notification.type == 'error' %}
+                                            <i class="fas fa-times-circle fa-2x text-danger"></i>
+                                        {% else %}
+                                            <i class="fas fa-info-circle fa-2x text-info"></i>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">
+                                                {{ notification.title }}
+                                                {% if not notification.is_read %}
+                                                    <span class="badge bg-primary ms-2">New</span>
+                                                {% endif %}
+                                            </h6>
+                                            <p class="text-muted mb-2">{{ notification.message }}</p>
+                                            {% if notification.related_item_type and notification.related_item_id %}
+                                                <a href="#" class="btn btn-sm btn-outline-primary" onclick="viewRelatedItem('{{ notification.related_item_type }}', {{ notification.related_item_id }})">
+                                                    <i class="fas fa-external-link-alt me-1"></i>View Related Item
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    <div class="notification-actions">
+                                        <small class="text-muted d-block mb-2">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ notification.created_at.strftime('%d %b %Y at %I:%M %p') }}
+                                        </small>
+                                        {% if not notification.is_read %}
+                                            <button class="btn btn-sm btn-outline-primary" onclick="markAsRead({{ notification.id }})">
+                                                <i class="fas fa-check me-1"></i>Mark as Read
+                                            </button>
+                                        {% endif %}
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteNotification({{ notification.id }})">
+                                            <i class="fas fa-trash me-1"></i>Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5" data-aos="fade-up">
+                    <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+                    <h4>No Notifications</h4>
+                    <p class="text-muted">You don't have any notifications yet. You'll receive updates about your lost and found items here.</p>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if notifications.pages > 1 %}
+        <div class="row mt-4">
+            <div class="col-12">
+                <nav aria-label="Notifications pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if notifications.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('notifications', page=notifications.prev_num) }}">
+                                    <i class="fas fa-chevron-left"></i> Previous
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in notifications.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != notifications.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('notifications', page=page_num) }}">
+                                            {{ page_num }}
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if notifications.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('notifications', page=notifications.next_num) }}">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Filter notifications
+function filterNotifications(type) {
+    const notifications = document.querySelectorAll('.notification-item');
+    const navLinks = document.querySelectorAll('.nav-link');
+    
+    // Update active tab
+    navLinks.forEach(link => link.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Show/hide notifications
+    notifications.forEach(notification => {
+        if (type === 'all') {
+                            notification.style.display = 'block';
+        } else if (type === 'unread') {
+            notification.style.display = notification.classList.contains('unread') ? 'block' : 'none';
+        } else {
+            notification.style.display = notification.dataset.type === type ? 'block' : 'none';
+        }
+    });
+}
+
+// Mark notification as read
+function markAsRead(notificationId) {
+    fetch(`/api/notifications/${notificationId}/read`, { method: 'POST' })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Error marking notification as read');
+            }
+        });
+}
+
+// Mark all notifications as read
+function markAllAsRead() {
+    if (confirm('Mark all notifications as read?')) {
+        fetch('/api/notifications/read-all', { method: 'POST' })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error marking notifications as read');
+                }
+            });
+    }
+}
+
+// Delete notification
+function deleteNotification(notificationId) {
+    if (confirm('Delete this notification?')) {
+        fetch(`/api/notifications/${notificationId}`, { method: 'DELETE' })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error deleting notification');
+                }
+            });
+    }
+}
+
+// View related item
+function viewRelatedItem(type, itemId) {
+    if (type === 'lost') {
+        window.location.href = `/lost-items#${itemId}`;
+    } else if (type === 'found') {
+        window.location.href = `/found-items#${itemId}`;
+    } else if (type === 'match') {
+        window.location.href = `/matches#${itemId}`;
+    }
+}
+
+// Auto-refresh notifications every 30 seconds
+setInterval(() => {
+    fetch('/api/notifications/count')
+        .then(response => response.json())
+        .then(data => {
+            // Update notification badge in navbar
+            const badge = document.querySelector('.notification-badge');
+            if (badge && data.unread_count > 0) {
+                badge.textContent = data.unread_count;
+                badge.style.display = 'flex';
+            } else if (badge) {
+                badge.style.display = 'none';
+            }
+        })
+        .catch(error => console.error('Error refreshing notifications:', error));
+}, 30000);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // 'A' to mark all as read
+    if (e.key === 'a' && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        markAllAsRead();
+    }
+    // 'R' to refresh
+    if (e.key === 'r' && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        location.reload();
+    }
+});
+
+// Add hover effects
+document.addEventListener('DOMContentLoaded', function() {
+    const notificationItems = document.querySelectorAll('.notification-item');
+    notificationItems.forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateX(5px)';
+        });
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateX(0)';
+        });
+    });
+});
+</script>
+
+<style>
+.notification-item {
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.notification-item.unread {
+    background-color: #f8f9fa;
+    border-left-color: #007bff;
+}
+
+.notification-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.notification-icon {
+    opacity: 0.8;
+}
+
+.notification-actions .btn {
+    margin: 2px;
+}
+
+@media (max-width: 768px) {
+    .notification-actions {
+        margin-top: 10px;
+        text-align: left !important;
+    }
+    
+    .notification-actions .btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 5px;
+    }
+}
+</style>
+{% endblock %}

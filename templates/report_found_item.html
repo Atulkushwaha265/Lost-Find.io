@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+
+{% block title %}Report Found Item - Axis Lost & Found{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header Card -->
+            <div class="card bg-success text-white mb-4" data-aos="fade-up">
+                <div class="card-body text-center">
+                    <h3 class="mb-2">
+                        <i class="fas fa-check-circle me-2"></i>Report Found Item
+                    </h3>
+                    <p class="mb-0">Help reunite lost items with their owners by reporting what you've found</p>
+                </div>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card shadow-lg" data-aos="fade-up" data-aos-delay="100">
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data" id="foundItemForm">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="item_name" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>Item Name *
+                                </label>
+                                {{ form.item_name(class="form-control", placeholder="e.g., Black Wallet, iPhone 13, College ID Card") }}
+                                {% if form.item_name.errors %}
+                                    {% for error in form.item_name.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="category" class="form-label">
+                                    <i class="fas fa-th-large me-1"></i>Category *
+                                </label>
+                                {{ form.category(class="form-select") }}
+                                {% if form.category.errors %}
+                                    {% for error in form.category.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>Description
+                            </label>
+                            {{ form.description(class="form-control", rows="4", placeholder="Provide detailed description including color, brand, condition, identifying features, etc.") }}
+                            {% if form.description.errors %}
+                                {% for error in form.description.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                            <small class="text-muted">Include as many details as possible to help the owner identify their item</small>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="location_found" class="form-label">
+                                    <i class="fas fa-map-marker-alt me-1"></i>Location Found *
+                                </label>
+                                {{ form.location_found(class="form-control", placeholder="e.g., Library 2nd Floor, Cafeteria, Room A-201") }}
+                                {% if form.location_found.errors %}
+                                    {% for error in form.location_found.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="date_found" class="form-label">
+                                    <i class="fas fa-calendar-alt me-1"></i>Date Found *
+                                </label>
+                                {{ form.date_found(class="form-control") }}
+                                {% if form.date_found.errors %}
+                                    {% for error in form.date_found.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="storage_location" class="form-label">
+                                    <i class="fas fa-archive me-1"></i>Storage Location
+                                </label>
+                                {{ form.storage_location(class="form-control", placeholder="Where is the item being kept?") }}
+                                {% if form.storage_location.errors %}
+                                    {% for error in form.storage_location.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                                <small class="text-muted">Where are you keeping the found item?</small>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="contact_info" class="form-label">
+                                    <i class="fas fa-phone me-1"></i>Contact Information
+                                </label>
+                                {{ form.contact_info(class="form-control", placeholder="Phone number or alternative contact method") }}
+                                {% if form.contact_info.errors %}
+                                    {% for error in form.contact_info.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                                <small class="text-muted">How can the owner contact you?</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="image" class="form-label">
+                                <i class="fas fa-camera me-1"></i>Upload Image (Optional)
+                            </label>
+                            {{ form.image(class="form-control", accept="image/*", onchange="previewImage(this, 'imagePreview')") }}
+                            {% if form.image.errors %}
+                                {% for error in form.image.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                            <small class="text-muted">Upload a clear photo of the found item (highly recommended)</small>
+                            
+                            <!-- Image Preview -->
+                            <div class="mt-3" id="imagePreviewContainer" style="display: none;">
+                                <img id="imagePreview" class="img-thumbnail" style="max-height: 200px; max-width: 100%;">
+                            </div>
+                        </div>
+                        
+                        <!-- Important Notice -->
+                        <div class="alert alert-warning mb-4">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Important Notice
+                            </h6>
+                            <ul class="mb-0 small">
+                                <li>Please be honest and accurate in your report</li>
+                                <li>Keep the item safe until the owner claims it</li>
+                                <li>Do not attempt to use or sell the found item</li>
+                                <li>Report to the Lost & Found department if possible</li>
+                                <li>You're doing a great service to the community!</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Tips Section -->
+                        <div class="alert alert-info mb-4">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-lightbulb me-2"></i>Tips for Better Matching
+                            </h6>
+                            <ul class="mb-0 small">
+                                <li>Take clear photos from multiple angles</li>
+                                <li>Note any unique features, damage, or identifying marks</li>
+                                <li>Be specific about the exact location found</li>
+                                <li>Include the time of day if you remember</li>
+                                <li>Describe the condition of the item accurately</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success btn-lg flex-fill">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Found Item Report
+                            </button>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-arrow-left me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Set max date to today
+document.getElementById('date_found').max = new Date().toISOString().split('T')[0];
+
+// Auto-suggest locations based on common places
+const commonLocations = [
+    'Library', 'Cafeteria', 'Computer Lab', 'Physics Lab', 'Chemistry Lab',
+    'Auditorium', 'Sports Complex', 'Parking Lot', 'Hostel', 'Classroom',
+    'Admin Office', 'Garden', 'Canteen', 'Workshop', 'Seminar Hall',
+    'Corridor', 'Staircase', 'Elevator', 'Restroom', 'Laboratory'
+];
+
+// Create datalist for location suggestions
+const locationInput = document.getElementById('location_found');
+const datalist = document.createElement('datalist');
+datalist.id = 'foundLocationSuggestions';
+commonLocations.forEach(location => {
+    const option = document.createElement('option');
+    option.value = location;
+    datalist.appendChild(option);
+});
+locationInput.parentNode.appendChild(datalist);
+locationInput.setAttribute('list', 'foundLocationSuggestions');
+
+// Auto-suggest storage locations
+const storageInput = document.getElementById('storage_location');
+const storageDatalist = document.createElement('datalist');
+storageDatalist.id = 'storageSuggestions';
+['Lost & Found Office', 'Admin Office', 'Security Office', 'My Room', 'With Me', 'Library Front Desk'].forEach(location => {
+    const option = document.createElement('option');
+    option.value = location;
+    storageDatalist.appendChild(option);
+});
+storageInput.parentNode.appendChild(storageDatalist);
+storageInput.setAttribute('list', 'storageSuggestions');
+
+// Form validation
+document.getElementById('foundItemForm').addEventListener('submit', function(e) {
+    const itemName = document.getElementById('item_name').value.trim();
+    const category = document.getElementById('category').value;
+    const location = document.getElementById('location_found').value.trim();
+    const date = document.getElementById('date_found').value;
+    
+    if (!itemName || !category || !location || !date) {
+        e.preventDefault();
+        alert('Please fill in all required fields');
+        return false;
+    }
+    
+    // Validate item name length
+    if (itemName.length < 2) {
+        e.preventDefault();
+        alert('Item name must be at least 2 characters long');
+        return false;
+    }
+    
+    // Validate date is not in future
+    const selectedDate = new Date(date);
+    const today = new Date();
+    if (selectedDate > today) {
+        e.preventDefault();
+        alert('Date found cannot be in the future');
+        return false;
+    }
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+});
+
+// Character counter for description
+const descriptionField = document.getElementById('description');
+if (descriptionField) {
+    const counter = document.createElement('small');
+    counter.className = 'text-muted';
+    counter.textContent = '0 / 1000 characters';
+    descriptionField.parentNode.appendChild(counter);
+    
+    descriptionField.addEventListener('input', function() {
+        const length = this.value.length;
+        counter.textContent = `${length} / 1000 characters`;
+        
+        if (length > 900) {
+            counter.className = 'text-warning';
+        } else if (length >= 1000) {
+            counter.className = 'text-danger';
+        } else {
+            counter.className = 'text-muted';
+        }
+    });
+}
+
+// Auto-save draft to localStorage
+const formFields = ['item_name', 'category', 'description', 'location_found', 'date_found', 'storage_location', 'contact_info'];
+formFields.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (field) {
+        // Load saved value
+        const savedValue = localStorage.getItem(`found_item_${fieldId}`);
+        if (savedValue) {
+            field.value = savedValue;
+        }
+        
+        // Save on change
+        field.addEventListener('input', function() {
+            localStorage.setItem(`found_item_${fieldId}`, this.value);
+        });
+    }
+});
+
+// Clear draft on successful submission
+document.getElementById('foundItemForm').addEventListener('submit', function() {
+    formFields.forEach(fieldId => {
+        localStorage.removeItem(`found_item_${fieldId}`);
+    });
+});
+
+// Show appreciation message on form load
+window.addEventListener('load', function() {
+    setTimeout(() => {
+        const appreciationAlert = document.createElement('div');
+        appreciationAlert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+        appreciationAlert.style.zIndex = '9999';
+        appreciationAlert.innerHTML = `
+            <i class="fas fa-heart me-2"></i>Thank you for being honest and helping others! Your contribution makes our community better.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(appreciationAlert);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (appreciationAlert.parentNode) {
+                appreciationAlert.remove();
+            }
+        }, 5000);
+    }, 1000);
+});
+</script>
+{% endblock %}

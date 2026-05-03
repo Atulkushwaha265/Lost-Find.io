@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Axis Lost & Found{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white" data-aos="fade-up">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-2">
+                                <i class="fas fa-tachometer-alt me-2"></i>Welcome back, {{ current_user.name }}!
+                            </h2>
+                            <p class="mb-0">Manage your lost and found items from your personal dashboard</p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="mt-3 mt-md-0">
+                                <a href="{{ url_for('report_lost_item') }}" class="btn btn-gold me-2">
+                                    <i class="fas fa-times-circle me-1"></i>Report Lost
+                                </a>
+                                <a href="{{ url_for('report_found_item') }}" class="btn btn-light">
+                                    <i class="fas fa-check-circle me-1"></i>Report Found
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3" data-aos="zoom-in" data-aos-delay="100">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-number">{{ lost_items|length }}</div>
+                <div class="stat-label">Lost Items</div>
+            </div>
+        </div>
+        
+        <div class="col-md-3" data-aos="zoom-in" data-aos-delay="200">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-number">{{ found_items|length }}</div>
+                <div class="stat-label">Found Items</div>
+            </div>
+        </div>
+        
+        <div class="col-md-3" data-aos="zoom-in" data-aos-delay="300">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-link"></i>
+                </div>
+                <div class="stat-number">{{ matches|length }}</div>
+                <div class="stat-label">Matches</div>
+            </div>
+        </div>
+        
+        <div class="col-md-3" data-aos="zoom-in" data-aos-delay="400">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div class="stat-number">{{ notifications|length }}</div>
+                <div class="stat-label">Notifications</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <!-- Recent Lost Items -->
+        <div class="col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-times-circle me-2"></i>Recent Lost Items
+                    </h5>
+                    <a href="{{ url_for('lost_items') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if lost_items %}
+                        {% for item in lost_items %}
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ item.item_name }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i>{{ item.location_lost }}
+                                        <span class="mx-2">•</span>
+                                        <i class="fas fa-calendar me-1"></i>{{ item.date_lost.strftime('%d %b %Y') }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge badge-{{ item.status }}">{{ item.status.title() }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No lost items reported yet</p>
+                            <a href="{{ url_for('report_lost_item') }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-1"></i>Report First Item
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Found Items -->
+        <div class="col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-check-circle me-2"></i>Recent Found Items
+                    </h5>
+                    <a href="{{ url_for('found_items') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if found_items %}
+                        {% for item in found_items %}
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ item.item_name }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i>{{ item.location_found }}
+                                        <span class="mx-2">•</span>
+                                        <i class="fas fa-calendar me-1"></i>{{ item.date_found.strftime('%d %b %Y') }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge badge-{{ item.status }}">{{ item.status.title() }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No found items reported yet</p>
+                            <a href="{{ url_for('report_found_item') }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-1"></i>Report First Item
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Matches and Notifications -->
+    <div class="row">
+        <!-- Recent Matches -->
+        <div class="col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="300">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-link me-2"></i>Recent Matches
+                    </h5>
+                    <a href="{{ url_for('matches') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if matches %}
+                        {% for match in matches %}
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ match.lost_item.item_name }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-percentage me-1"></i>{{ match.match_score }}% Match
+                                        <span class="mx-2">•</span>
+                                        <i class="fas fa-calendar me-1"></i>{{ match.created_at.strftime('%d %b %Y') }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge badge-{{ match.status }}">{{ match.status.title() }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-unlink fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No matches yet</p>
+                            <small class="text-muted">Matches will appear here when found items are similar to your lost items</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Notifications -->
+        <div class="col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="400">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bell me-2"></i>Recent Notifications
+                    </h5>
+                    <a href="{{ url_for('notifications') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if notifications %}
+                        {% for notification in notifications %}
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ notification.title }}</h6>
+                                    <small class="text-muted">{{ notification.message[:50] }}...</small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted">{{ notification.created_at.strftime('%d %b') }}</small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No new notifications</p>
+                            <small class="text-muted">You'll receive notifications about matches and updates</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12" data-aos="fade-up" data-aos-delay="500">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a href="{{ url_for('report_lost_item') }}" class="btn btn-outline-danger w-100">
+                                <i class="fas fa-times-circle me-2"></i>Report Lost Item
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('report_found_item') }}" class="btn btn-outline-success w-100">
+                                <i class="fas fa-check-circle me-2"></i>Report Found Item
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('lost_items') }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-list me-2"></i>View Lost Items
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('found_items') }}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-list me-2"></i>View Found Items
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-refresh notifications every 30 seconds
+setInterval(() => {
+    fetch('/api/notifications')
+        .then(response => response.json())
+        .then(data => {
+            // Update notification count
+            const badge = document.querySelector('.notification-badge');
+            if (badge && data.unread_count > 0) {
+                badge.textContent = data.unread_count;
+            }
+        })
+        .catch(error => console.error('Error fetching notifications:', error));
+}, 30000);
+
+// Smooth scroll animations
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to cards
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
+{% endblock %}

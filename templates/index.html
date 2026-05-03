@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}Axis College Lost & Found Portal{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center min-vh-100">
+            <div class="col-lg-6 hero-content">
+                <div data-aos="fade-right">
+                    <h1 class="display-4 fw-bold mb-4">
+                        Find Your Lost Items at Axis College
+                    </h1>
+                    <p class="lead mb-4">
+                        Our comprehensive Lost and Found portal helps students recover their belongings quickly and efficiently. Report lost items, submit found items, and let our smart matching system do the rest.
+                    </p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-gold btn-lg">
+                                <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('register') }}" class="btn btn-gold btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Get Started
+                            </a>
+                            <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div data-aos="fade-left">
+                    <div class="search-container">
+                        <input type="text" class="search-input" id="heroSearch" placeholder="Search for lost items...">
+                        <button class="search-btn" onclick="performSearch(document.getElementById('heroSearch').value)">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold" data-aos="fade-up">How It Works</h2>
+            <p class="lead text-muted" data-aos="fade-up" data-aos-delay="100">
+                Simple steps to recover your lost items
+            </p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="card h-100 text-center p-4">
+                    <div class="stat-icon mb-3">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <h4>1. Register/Login</h4>
+                    <p class="text-muted">Create your account or login to access the portal and start reporting items.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="card h-100 text-center p-4">
+                    <div class="stat-icon mb-3">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <h4>2. Report Items</h4>
+                    <p class="text-muted">Fill out detailed forms for lost or found items with images and descriptions.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="card h-100 text-center p-4">
+                    <div class="stat-icon mb-3">
+                        <i class="fas fa-link"></i>
+                    </div>
+                    <h4>3. Get Matched</h4>
+                    <p class="text-muted">Our smart algorithm matches lost items with found ones. Admin verifies and returns items.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold" data-aos="fade-up">Portal Statistics</h2>
+            <p class="lead text-muted" data-aos="fade-up" data-aos-delay="100">
+                Real-time data from our Lost and Found system
+            </p>
+        </div>
+        
+        <div class="row g-4" id="statsContainer">
+            <div class="col-md-3" data-aos="zoom-in" data-aos-delay="100">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-number" id="totalLost">-</div>
+                    <div class="stat-label">Lost Items</div>
+                </div>
+            </div>
+            
+            <div class="col-md-3" data-aos="zoom-in" data-aos-delay="200">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-number" id="totalFound">-</div>
+                    <div class="stat-label">Found Items</div>
+                </div>
+            </div>
+            
+            <div class="col-md-3" data-aos="zoom-in" data-aos-delay="300">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-link"></i>
+                    </div>
+                    <div class="stat-number" id="totalMatches">-</div>
+                    <div class="stat-label">Matches</div>
+                </div>
+            </div>
+            
+            <div class="col-md-3" data-aos="zoom-in" data-aos-delay="400">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-undo"></i>
+                    </div>
+                    <div class="stat-number" id="returnedItems">-</div>
+                    <div class="stat-label">Returned</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Activity Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold" data-aos="fade-up">Recent Activity</h2>
+            <p class="lead text-muted" data-aos="fade-up" data-aos-delay="100">
+                Latest items reported in our system
+            </p>
+        </div>
+        
+        <div class="row" id="recentActivity">
+            <div class="col-12 text-center" data-aos="fade-up">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold" data-aos="fade-up">Student Testimonials</h2>
+            <p class="lead text-muted" data-aos="fade-up" data-aos-delay="100">
+                What our students say about the Lost and Found portal
+            </p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <div class="text-warning">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                        <p class="mb-3">"I lost my wallet and within 24 hours, I got a notification that it was found. The process was so smooth and quick!"</p>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary rounded-circle p-2 me-3">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Rahul Sharma</h6>
+                                <small class="text-muted">Computer Science</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <div class="text-warning">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                        <p class="mb-3">"The matching algorithm is amazing! Found my lost ID card within hours. Thank you Axis College for this initiative!"</p>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary rounded-circle p-2 me-3">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Priya Patel</h6>
+                                <small class="text-muted">Mechanical Engineering</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <div class="text-warning">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                        <p class="mb-3">"Very user-friendly interface and the admin team is very responsive. Got my lost phone back within 2 days!"</p>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary rounded-circle p-2 me-3">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Amit Kumar</h6>
+                                <small class="text-muted">Electronics Engineering</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Fetch statistics
+fetch('/api/stats')
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('totalLost').textContent = data.total_lost || 0;
+        document.getElementById('totalFound').textContent = data.total_found || 0;
+        document.getElementById('totalMatches').textContent = data.total_matches || 0;
+        document.getElementById('returnedItems').textContent = data.returned_items || 0;
+    })
+    .catch(error => {
+        console.error('Error fetching stats:', error);
+        // Set default values if API fails
+        document.getElementById('totalLost').textContent = '0';
+        document.getElementById('totalFound').textContent = '0';
+        document.getElementById('totalMatches').textContent = '0';
+        document.getElementById('returnedItems').textContent = '0';
+    });
+
+// Search on Enter key
+document.getElementById('heroSearch').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        performSearch(this.value);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,466 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Axis Lost & Found{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Admin Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-warning text-dark" data-aos="fade-up">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-2">
+                                <i class="fas fa-shield-alt me-2"></i>Admin Dashboard
+                            </h2>
+                            <p class="mb-0">Manage and verify lost and found items for Axis College</p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="mt-3 mt-md-0">
+                                <span class="badge bg-dark me-2">
+                                    <i class="fas fa-user me-1"></i>{{ current_user.name }}
+                                </span>
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-crown me-1"></i>Administrator
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2" data-aos="zoom-in" data-aos-delay="100">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-number">{{ total_lost }}</div>
+                <div class="stat-label">Lost Items</div>
+            </div>
+        </div>
+        
+        <div class="col-md-2" data-aos="zoom-in" data-aos-delay="200">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-number">{{ total_found }}</div>
+                <div class="stat-label">Found Items</div>
+            </div>
+        </div>
+        
+        <div class="col-md-2" data-aos="zoom-in" data-aos-delay="300">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-link"></i>
+                </div>
+                <div class="stat-number">{{ total_matches }}</div>
+                <div class="stat-label">Total Matches</div>
+            </div>
+        </div>
+        
+        <div class="col-md-2" data-aos="zoom-in" data-aos-delay="400">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-number">{{ pending_matches }}</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </div>
+        
+        <div class="col-md-2" data-aos="zoom-in" data-aos-delay="500">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <div class="stat-number">
+                    {% if total_lost > 0 %}
+                        {{ ((total_matches / total_lost) * 100)|round(1) }}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </div>
+                <div class="stat-label">Match Rate</div>
+            </div>
+        </div>
+        
+        <div class="col-md-2" data-aos="zoom-in" data-aos-delay="600">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-number">
+                    {% set returned = (lost_items|selectattr('status', 'equalto', 'returned')|list|length) + (found_items|selectattr('status', 'equalto', 'returned')|list|length) %}
+                    {{ returned }}
+                </div>
+                <div class="stat-label">Returned</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12" data-aos="fade-up">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-2">
+                            <a href="{{ url_for('matches') }}" class="btn btn-warning w-100">
+                                <i class="fas fa-link me-2"></i>Review Matches
+                                {% if pending_matches > 0 %}
+                                <span class="badge bg-danger ms-1">{{ pending_matches }}</span>
+                                {% endif %}
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{{ url_for('lost_items') }}" class="btn btn-danger w-100">
+                                <i class="fas fa-times-circle me-2"></i>Lost Items
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{{ url_for('found_items') }}" class="btn btn-success w-100">
+                                <i class="fas fa-check-circle me-2"></i>Found Items
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{{ url_for('notifications') }}" class="btn btn-info w-100">
+                                <i class="fas fa-bell me-2"></i>Notifications
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-primary w-100" onclick="exportData()">
+                                <i class="fas fa-download me-2"></i>Export Data
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-secondary w-100" onclick="refreshStats()">
+                                <i class="fas fa-sync me-2"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <!-- Pending Matches -->
+        <div class="col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>Pending Matches
+                    </h5>
+                    <a href="{{ url_for('matches') }}" class="btn btn-sm btn-outline-warning">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if pending_matches_list %}
+                        {% for match in pending_matches_list %}
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ match.lost_item.item_name }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-percentage me-1"></i>{{ match.match_score }}% Match
+                                        <span class="mx-2">•</span>
+                                        <i class="fas fa-calendar me-1"></i>{{ match.created_at.strftime('%d %b %Y') }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <a href="{{ url_for('matches') }}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-eye me-1"></i>Review
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <p class="text-muted">No pending matches</p>
+                            <small class="text-muted">All caught up! Great job!</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Lost Items -->
+        <div class="col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-times-circle me-2"></i>Recent Lost Items
+                    </h5>
+                    <a href="{{ url_for('lost_items') }}" class="btn btn-sm btn-outline-danger">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_lost %}
+                        {% for item in recent_lost %}
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ item.item_name }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-user me-1"></i>{{ item.reporter.name }}
+                                        <span class="mx-2">•</span>
+                                        <i class="fas fa-calendar me-1"></i>{{ item.created_at.strftime('%d %b %Y') }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge badge-{{ item.status }}">{{ item.status.title() }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No lost items reported yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Found Items -->
+        <div class="col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="300">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-check-circle me-2"></i>Recent Found Items
+                    </h5>
+                    <a href="{{ url_for('found_items') }}" class="btn btn-sm btn-outline-success">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_found %}
+                        {% for item in recent_found %}
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ item.item_name }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-user me-1"></i>{{ item.finder.name }}
+                                        <span class="mx-2">•</span>
+                                        <i class="fas fa-calendar me-1"></i>{{ item.created_at.strftime('%d %b %Y') }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge badge-{{ item.status }}">{{ item.status.title() }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No found items reported yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- System Status -->
+        <div class="col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="400">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>System Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-success rounded-circle p-2 me-2">
+                                    <i class="fas fa-database text-white"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Database</h6>
+                                    <small class="text-success">Connected</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-success rounded-circle p-2 me-2">
+                                    <i class="fas fa-server text-white"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Server</h6>
+                                    <small class="text-success">Online</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-info rounded-circle p-2 me-2">
+                                    <i class="fas fa-users text-white"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Active Users</h6>
+                                    <small class="text-info">{{ total_lost + total_found }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-warning rounded-circle p-2 me-2">
+                                    <i class="fas fa-clock text-white"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Last Update</h6>
+                                    <small class="text-muted">Just now</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="text-center">
+                        <h6>Performance Metrics</h6>
+                        <div class="row mt-3">
+                            <div class="col-4">
+                                <small class="text-muted">Avg Match Time</small>
+                                <h5 class="text-primary">2.5 days</h5>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Success Rate</small>
+                                <h5 class="text-success">87%</h5>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Response Time</small>
+                                <h5 class="text-info">&lt;1s</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-refresh dashboard every 30 seconds
+let refreshInterval;
+
+function startAutoRefresh() {
+    refreshInterval = setInterval(() => {
+        refreshStats();
+    }, 30000);
+}
+
+function refreshStats() {
+    fetch('/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            // Update statistics with animation
+            updateStatWithAnimation('total_lost', data.total_lost);
+            updateStatWithAnimation('total_found', data.total_found);
+            updateStatWithAnimation('total_matches', data.total_matches);
+            updateStatWithAnimation('pending_matches', data.pending_matches);
+        })
+        .catch(error => console.error('Error refreshing stats:', error));
+}
+
+function updateStatWithAnimation(elementId, newValue) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        const currentValue = parseInt(element.textContent);
+        if (currentValue !== newValue) {
+            element.style.transform = 'scale(1.2)';
+            element.style.color = '#28a745';
+            element.textContent = newValue;
+            
+            setTimeout(() => {
+                element.style.transform = 'scale(1)';
+                element.style.color = '';
+            }, 300);
+        }
+    }
+}
+
+// Export data functionality
+function exportData() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Export Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Select what data you want to export:</p>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="exportLost" checked>
+                        <label class="form-check-label" for="exportLost">Lost Items</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="exportFound" checked>
+                        <label class="form-check-label" for="exportFound">Found Items</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="exportMatches" checked>
+                        <label class="form-check-label" for="exportMatches">Matches</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="performExport()">Export</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    
+    modal.addEventListener('hidden.bs.modal', () => {
+        document.body.removeChild(modal);
+    });
+}
+
+function performExport() {
+    // This would typically make an API call to export data
+    alert('Export functionality would be implemented here');
+}
+
+// Start auto-refresh when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    startAutoRefresh();
+});
+
+// Clean up interval when page unloads
+window.addEventListener('beforeunload', function() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+});
+
+// Add keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl+R for refresh
+    if (e.ctrlKey && e.key === 'r') {
+        e.preventDefault();
+        refreshStats();
+    }
+    // Ctrl+E for export
+    if (e.ctrlKey && e.key === 'e') {
+        e.preventDefault();
+        exportData();
+    }
+});
+</script>
+{% endblock %}

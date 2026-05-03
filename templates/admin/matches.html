@@ -1,0 +1,448 @@
+{% extends "base.html" %}
+
+{% block title %}Match Verification - Axis Lost & Found{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-warning text-dark" data-aos="fade-up">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-2">
+                                <i class="fas fa-link me-2"></i>Match Verification
+                            </h2>
+                            <p class="mb-0">Review and verify potential matches between lost and found items</p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="mt-3 mt-md-0">
+                                <span class="badge bg-danger me-2" id="pendingCount">
+                                    {{ matches.items|selectattr('status', 'equalto', 'pending')|list|length }} Pending
+                                </span>
+                                <span class="badge bg-success">
+                                    {{ matches.items|selectattr('status', 'equalto', 'verified')|list|length }} Verified
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" data-aos="fade-up">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">Filter by Status</label>
+                            <select name="status" id="status" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Status</option>
+                                <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="verified" {% if status == 'verified' %}selected{% endif %}>Verified</option>
+                                <option value="rejected" {% if status == 'rejected' %}selected{% endif %}>Rejected</option>
+                                <option value="returned" {% if status == 'returned' %}selected{% endif %}>Returned</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="score" class="form-label">Filter by Match Score</label>
+                            <select name="score" id="score" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Scores</option>
+                                <option value="high">High (80-100%)</option>
+                                <option value="medium">Medium (50-79%)</option>
+                                <option value="low">Low (0-49%)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="sort" class="form-label">Sort By</label>
+                            <select name="sort" id="sort" class="form-select" onchange="this.form.submit()">
+                                <option value="score">Match Score</option>
+                                <option value="date">Date Created</option>
+                                <option value="status">Status</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Matches List -->
+    <div class="row">
+        <div class="col-12">
+            {% if matches.items %}
+                {% for match in matches.items %}
+                    <div class="card mb-4" data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">
+                                    <i class="fas fa-link me-2"></i>Match #{{ match.id }}
+                                </h5>
+                                <small class="text-muted">
+                                    Created on {{ match.created_at.strftime('%d %B %Y at %I:%M %p') }}
+                                </small>
+                            </div>
+                            <div>
+                                <span class="badge bg-primary fs-6">{{ match.match_score }}% Match</span>
+                                <span class="badge badge-{{ match.status }} ms-2">{{ match.status.title() }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Lost Item -->
+                                <div class="col-md-6">
+                                    <div class="card border-danger">
+                                        <div class="card-header bg-danger text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-times-circle me-2"></i>Lost Item
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <h6>{{ match.lost_item.item_name }}</h6>
+                                            <p class="text-muted small mb-2">{{ match.lost_item.description or 'No description provided' }}</p>
+                                            
+                                            <div class="row small">
+                                                <div class="col-6">
+                                                    <strong>Category:</strong><br>{{ match.lost_item.category }}
+                                                </div>
+                                                <div class="col-6">
+                                                    <strong>Date Lost:</strong><br>{{ match.lost_item.date_lost.strftime('%d %b %Y') }}
+                                                </div>
+                                                <div class="col-6 mt-2">
+                                                    <strong>Location:</strong><br>{{ match.lost_item.location_lost }}
+                                                </div>
+                                                <div class="col-6 mt-2">
+                                                    <strong>Reported by:</strong><br>{{ match.lost_item.reporter.name }}
+                                                </div>
+                                            </div>
+                                            
+                                            {% if match.lost_item.image_url %}
+                                                <div class="mt-3">
+                                                    <img src="{{ url_for('uploaded_file', filename=match.lost_item.image_url) }}" 
+                                                         class="img-thumbnail" style="max-height: 150px; max-width: 100%;">
+                                                </div>
+                                            {% endif %}
+                                            
+                                            <div class="mt-3">
+                                                <strong>Contact:</strong><br>
+                                                <small>{{ match.lost_item.contact_info or match.lost_item.reporter.email }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Found Item -->
+                                <div class="col-md-6">
+                                    <div class="card border-success">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-check-circle me-2"></i>Found Item
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <h6>{{ match.found_item.item_name }}</h6>
+                                            <p class="text-muted small mb-2">{{ match.found_item.description or 'No description provided' }}</p>
+                                            
+                                            <div class="row small">
+                                                <div class="col-6">
+                                                    <strong>Category:</strong><br>{{ match.found_item.category }}
+                                                </div>
+                                                <div class="col-6">
+                                                    <strong>Date Found:</strong><br>{{ match.found_item.date_found.strftime('%d %b %Y') }}
+                                                </div>
+                                                <div class="col-6 mt-2">
+                                                    <strong>Location:</strong><br>{{ match.found_item.location_found }}
+                                                </div>
+                                                <div class="col-6 mt-2">
+                                                    <strong>Found by:</strong><br>{{ match.found_item.finder.name }}
+                                                </div>
+                                            </div>
+                                            
+                                            {% if match.found_item.image_url %}
+                                                <div class="mt-3">
+                                                    <img src="{{ url_for('uploaded_file', filename=match.found_item.image_url) }}" 
+                                                         class="img-thumbnail" style="max-height: 150px; max-width: 100%;">
+                                                </div>
+                                            {% endif %}
+                                            
+                                            <div class="mt-3">
+                                                <strong>Contact:</strong><br>
+                                                <small>{{ match.found_item.contact_info or match.found_item.finder.email }}</small>
+                                            </div>
+                                            
+                                            {% if match.found_item.storage_location %}
+                                                <div class="mt-2">
+                                                    <strong>Storage:</strong><br>
+                                                    <small>{{ match.found_item.storage_location }}</small>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Match Analysis -->
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <h6 class="alert-heading">
+                                            <i class="fas fa-chart-pie me-2"></i>Match Analysis
+                                        </h6>
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <strong>Category Match:</strong><br>
+                                                {% if match.lost_item.category == match.found_item.category %}
+                                                    <span class="text-success">✓ Perfect Match</span>
+                                                {% else %}
+                                                    <span class="text-danger">✗ Different</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>Name Similarity:</strong><br>
+                                                {% set name_similarity = match.match_score * 0.3 %}
+                                                <span class="text-primary">{{ name_similarity|round(1) }}%</span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>Location Match:</strong><br>
+                                                {% if match.lost_item.location_lost.lower() == match.found_item.location_found.lower() %}
+                                                    <span class="text-success">✓ Same Location</span>
+                                                {% else %}
+                                                    <span class="text-warning">△ Different Location</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>Time Proximity:</strong><br>
+                                                {% set days_diff = (match.lost_item.date_lost - match.found_item.date_found)|abs %}
+                                                {% if days_diff <= 1 %}
+                                                    <span class="text-success">✓ Same Day</span>
+                                                {% elif days_diff <= 7 %}
+                                                    <span class="text-warning">△ {{ days_diff }} days</span>
+                                                {% else %}
+                                                    <span class="text-danger">✗ {{ days_diff }} days</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Verification Notes -->
+                            {% if match.verification_notes %}
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="alert alert-light">
+                                            <h6 class="alert-heading">Previous Notes:</h6>
+                                            <p class="mb-0">{{ match.verification_notes }}</p>
+                                            {% if match.verified_by %}
+                                                <small class="text-muted">
+                                                    - {{ match.verified_by.name }} on {{ match.updated_at.strftime('%d %b %Y') }}
+                                                </small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Action Buttons -->
+                            {% if match.status == 'pending' %}
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <form method="POST" action="{{ url_for('update_match', match_id=match.id) }}" class="d-inline">
+                                            <input type="hidden" name="action" value="verify">
+                                            <div class="row g-3">
+                                                <div class="col-md-8">
+                                                    <textarea name="verification_notes" class="form-control" rows="2" 
+                                                              placeholder="Add verification notes (optional)"></textarea>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <button type="submit" class="btn btn-success w-100 mb-2">
+                                                        <i class="fas fa-check me-2"></i>Verify Match
+                                                    </button>
+                                                    <button type="submit" class="btn btn-danger w-100" name="action" value="reject">
+                                                        <i class="fas fa-times me-2"></i>Reject Match
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% elif match.status == 'verified' %}
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="d-flex gap-2">
+                                            <form method="POST" action="{{ url_for('mark_item_returned', item_type='lost', item_id=match.lost_item.id) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-undo me-2"></i>Mark as Returned
+                                                </button>
+                                            </form>
+                                            <button class="btn btn-outline-secondary" onclick="contactUsers({{ match.id }})">
+                                                <i class="fas fa-envelope me-2"></i>Contact Users
+                                            </button>
+                                            <button class="btn btn-outline-info" onclick="printMatch({{ match.id }})">
+                                                <i class="fas fa-print me-2"></i>Print
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+                
+                <!-- Pagination -->
+                {% if matches.pages > 1 %}
+                    <nav aria-label="Matches pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if matches.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('matches', page=matches.prev_num, status=status) }}">Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in matches.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != matches.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('matches', page=page_num, status=status) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if matches.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('matches', page=matches.next_num, status=status) }}">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5" data-aos="fade-up">
+                    <i class="fas fa-unlink fa-4x text-muted mb-3"></i>
+                    <h4>No Matches Found</h4>
+                    <p class="text-muted">There are no matches matching your current filters.</p>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-refresh pending matches
+setInterval(() => {
+    const pendingCount = document.getElementById('pendingCount');
+    if (pendingCount) {
+        fetch('/api/stats')
+            .then(response => response.json())
+            .then(data => {
+                const currentCount = parseInt(pendingCount.textContent);
+                if (data.pending_matches !== currentCount) {
+                    pendingCount.textContent = data.pending_matches + ' Pending';
+                    pendingCount.classList.add('pulse');
+                    setTimeout(() => pendingCount.classList.remove('pulse'), 1000);
+                }
+            });
+    }
+}, 30000);
+
+// Contact users function
+function contactUsers(matchId) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Contact Users</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Select which users to contact and the message to send:</p>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="contactLost" checked>
+                        <label class="form-check-label" for="contactLost">Contact person who lost the item</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="contactFound" checked>
+                        <label class="form-check-label" for="contactFound">Contact person who found the item</label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Message:</label>
+                        <textarea id="message" class="form-control" rows="4">We have found a potential match for your reported item. Please visit the Lost & Found office for verification.</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="sendContactMessage(${matchId})">Send Message</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+}
+
+function sendContactMessage(matchId) {
+    // This would typically send messages via email or notification system
+    alert('Message would be sent to selected users');
+    bootstrap.Modal.getInstance(document.querySelector('.modal')).hide();
+}
+
+// Print match function
+function printMatch(matchId) {
+    window.print();
+}
+
+// Add pulse animation
+const style = document.createElement('style');
+style.textContent = `
+    .pulse {
+        animation: pulse 1s ease-in-out;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+`;
+document.head.appendChild(style);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // 'V' to verify first pending match
+    if (e.key === 'v' && !e.ctrlKey && !e.altKey) {
+        const firstPending = document.querySelector('[data-aos-delay="50"] .btn-success');
+        if (firstPending) {
+            firstPending.click();
+        }
+    }
+    // 'R' to reject first pending match
+    if (e.key === 'r' && !e.ctrlKey && !e.altKey) {
+        const firstPending = document.querySelector('[data-aos-delay="50"] .btn-danger');
+        if (firstPending) {
+            firstPending.click();
+        }
+    }
+});
+</script>
+{% endblock %}
